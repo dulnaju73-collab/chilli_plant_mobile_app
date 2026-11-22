@@ -1,0 +1,80 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out app source
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.41.5'
+          cache: true
+
+      - name: Create Android Firebase client config
+        run: |
+          python3 - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          options = Path('lib/core/config/firebase_options.dart').read_text()
+          android = options.split('static const FirebaseOptions android =', 1)[1].split(');', 1)[0]
+
+          def option(name):
+              match = re.search(rf"{name}:\s*'([^']+)'", android)
+              if not match:
+                  raise SystemExit(f'Missing Android Firebase option: {name}')
+              return match.group(1)
+
+          build_file = Path('android/app/build.gradle.kts').read_text()
+          package = re.search(r'applicationId\s*=\s*"([^"]+)"', build_file)
+          if not package:
+              raise SystemExit('Android applicationId was not found.')
+
+          project_id = option('projectId')
+          config = {
+              'project_info': {
+                  'project_number': option('messagingSenderId'),
+                  'project_id': project_id,
+                  'storage_bucket': f'{project_id}.firebasestorage.app',
+              },
+              'client': [{
+                  'client_info': {
+                      'mobilesdk_app_id': option('appId'),
+                      'android_client_info': {'package_name': package.group(1)},
+                  },
+                  'api_key': [{'current_key': option('apiKey')}],
+              }],
+              'configuration_version': '1',
+          }
+          Path('android/app/google-services.json').write_text(json.dumps(config, indent=2) + '\n')
+          PY
+
+      - name: Build release APK
+        run: flutter build apk --release --dart-define=API_BASE_URL=https://16.178.139.98
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: chilli-plant-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
