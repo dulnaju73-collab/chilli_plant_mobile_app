@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -128,6 +129,8 @@ class _PlantScanPageState extends State<PlantScanPage> {
   bool _isPredicting = false;
 
   String? _errorMessage;
+  String? _errorCode;
+  bool _isNetworkError = false;
 
   // ============================================================
   // PICK IMAGE
@@ -164,6 +167,8 @@ class _PlantScanPageState extends State<PlantScanPage> {
         _errorMessage = e is ApiException
             ? e.message
             : 'Could not capture image. Please try again.';
+        _errorCode = e is ApiException ? e.code : null;
+        _isNetworkError = e is ApiException && e.isNetworkError;
       });
 
       debugPrint('Image capture error: $e');
@@ -185,6 +190,8 @@ class _PlantScanPageState extends State<PlantScanPage> {
       _predictionLabel = null;
       _predictionConfidence = null;
       _errorMessage = null;
+      _errorCode = null;
+      _isNetworkError = false;
       _isPredicting = true;
     });
 
@@ -196,7 +203,7 @@ class _PlantScanPageState extends State<PlantScanPage> {
       final confidence = result.confidence;
 
       if (prediction.isEmpty) {
-        throw Exception('No prediction was returned by the backend.');
+        throw const ApiException('No prediction was returned by the server.');
       }
 
       if (!mounted) return;
@@ -206,19 +213,58 @@ class _PlantScanPageState extends State<PlantScanPage> {
         _predictionConfidence = confidence;
         _isPredicting = false;
         _errorMessage = null;
+        _errorCode = null;
+        _isNetworkError = false;
       });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isPredicting = false;
+        _errorMessage = e.message;
+        _errorCode = e.code;
+        _isNetworkError = e.isNetworkError;
+      });
+
+      debugPrint(
+        'API prediction error (status=${e.statusCode}, code=${e.code}): ${e.message}',
+      );
+    } on SocketException catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isPredicting = false;
+        _errorMessage =
+            'Could not connect to the server. Please check your internet connection and try again.';
+        _errorCode = null;
+        _isNetworkError = true;
+      });
+
+      debugPrint('Network prediction error: $e');
+    } on TimeoutException catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isPredicting = false;
+        _errorMessage =
+            'The request timed out. Please check your connection and try again.';
+        _errorCode = null;
+        _isNetworkError = true;
+      });
+
+      debugPrint('Timeout prediction error: $e');
     } catch (e) {
       if (!mounted) return;
 
       setState(() {
         _isPredicting = false;
-
-        _errorMessage = e is ApiException
-            ? e.message
-            : 'Prediction failed. Please check the backend connection and try again.';
+        _errorMessage =
+            'Unable to analyze the image right now. Please try again.';
+        _errorCode = null;
+        _isNetworkError = false;
       });
 
-      debugPrint('API prediction error: $e');
+      debugPrint('Unexpected prediction error: $e');
     }
   }
 
@@ -264,6 +310,8 @@ class _PlantScanPageState extends State<PlantScanPage> {
       _predictionLabel = null;
       _predictionConfidence = null;
       _errorMessage = null;
+      _errorCode = null;
+      _isNetworkError = false;
     });
 
     await _pickImage(ImageSource.gallery);
@@ -517,6 +565,78 @@ class _PlantScanPageState extends State<PlantScanPage> {
     );
   }
 
+  Widget _buildErrorBanner() {
+    final isInvalidPlant = _errorCode == ApiException.invalidPlantImageCode;
+    final Color backgroundColor;
+    final Color borderColor;
+    final Color iconColor;
+    final Color textColor;
+    final IconData icon;
+    final String? heading;
+
+    if (isInvalidPlant) {
+      backgroundColor = Colors.orange.shade50;
+      borderColor = Colors.orange.shade300;
+      iconColor = Colors.orange.shade800;
+      textColor = Colors.orange.shade900;
+      icon = Icons.warning_amber_rounded;
+      heading = 'Not a Chilli Plant Image';
+    } else if (_isNetworkError) {
+      backgroundColor = Colors.red.shade50;
+      borderColor = Colors.red.shade200;
+      iconColor = Colors.red.shade700;
+      textColor = Colors.red.shade800;
+      icon = Icons.wifi_off_rounded;
+      heading = 'Connection Issue';
+    } else {
+      backgroundColor = Colors.red.shade50;
+      borderColor = Colors.red.shade200;
+      iconColor = Colors.red.shade700;
+      textColor = Colors.red.shade800;
+      icon = Icons.error_outline;
+      heading = null;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: iconColor),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (heading != null) ...[
+                  Text(
+                    heading,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: textColor,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                ],
+                Text(
+                  _errorMessage!,
+                  style: TextStyle(color: textColor, height: 1.35),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ============================================================
   // BUILD
   // ============================================================
@@ -644,7 +764,7 @@ class _PlantScanPageState extends State<PlantScanPage> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'Sending image to detection server',
+                        'Validating chilli leaf and running detection',
                         style: TextStyle(color: Colors.black54),
                       ),
                     ],
@@ -652,30 +772,10 @@ class _PlantScanPageState extends State<PlantScanPage> {
                 ),
 
               // ==================================================
-              // ERROR
+              // ERROR / VALIDATION FEEDBACK
               // ==================================================
               if (_errorMessage != null && !_isPredicting)
-                Container(
-                  margin: const EdgeInsets.only(top: 10),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.red.shade200),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.error_outline, color: Colors.red.shade700),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          _errorMessage!,
-                          style: TextStyle(color: Colors.red.shade800),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildErrorBanner(),
 
               // ==================================================
               // PREDICTION RESULT

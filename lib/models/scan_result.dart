@@ -21,6 +21,12 @@ class ScanResult {
   final String? imageUrl;
   final String? imagePath;
 
+  static String? _nullableString(Object? value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
+  }
+
   factory ScanResult.fromJson(Map<String, dynamic> json) => ScanResult(
         id: json['id']?.toString() ?? '',
         disease: json['disease']?.toString() ?? 'Unknown',
@@ -30,18 +36,19 @@ class ScanResult {
         modelVersion: json['prediction_model_version']?.toString() ?? '',
         createdAt:
             DateTime.tryParse(json['created_at']?.toString() ?? '')?.toLocal(),
-        imageUrl: json['image_url']?.toString(),
-        imagePath: json['image_path']?.toString(),
+        imageUrl: _nullableString(json['image_url']),
+        imagePath: _nullableString(json['image_path']),
       );
 }
 
 class ResultsPageData {
-  const ResultsPageData(
-      {required this.items,
-      required this.total,
-      required this.page,
-      required this.pageSize,
-      required this.hasMore});
+  const ResultsPageData({
+    required this.items,
+    required this.total,
+    required this.page,
+    required this.pageSize,
+    required this.hasMore,
+  });
 
   final List<ScanResult> items;
   final int total;
