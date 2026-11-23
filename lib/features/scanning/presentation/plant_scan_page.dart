@@ -101,7 +101,14 @@ const Map<String, DiseaseInfo> diseaseInformation = {
 // ============================================================
 
 class PlantScanPage extends StatefulWidget {
-  const PlantScanPage({super.key});
+  const PlantScanPage({
+    super.key,
+    this.predictionService,
+    this.pickImageOverride,
+  });
+
+  final PredictionService? predictionService;
+  final Future<XFile?> Function(ImageSource source)? pickImageOverride;
 
   @override
   State<PlantScanPage> createState() => _PlantScanPageState();
@@ -109,9 +116,11 @@ class PlantScanPage extends StatefulWidget {
 
 class _PlantScanPageState extends State<PlantScanPage> {
   final ImagePicker _picker = ImagePicker();
-  final PredictionService _predictionService = PredictionService();
+  late final PredictionService _predictionService =
+      widget.predictionService ?? PredictionService();
 
   File? _selectedImage;
+  ImageSource _lastImageSource = ImageSource.camera;
 
   String? _predictionLabel;
   double? _predictionConfidence;
@@ -129,32 +138,57 @@ class _PlantScanPageState extends State<PlantScanPage> {
       return;
     }
 
+    _lastImageSource = source;
+
     try {
-      final pickedFile = await _picker.pickImage(
-        source: source,
-        imageQuality: 90,
-        maxWidth: 2048,
-        maxHeight: 2048,
-      );
+      final pickedFile = widget.pickImageOverride != null
+          ? await widget.pickImageOverride!(source)
+          : await _picker.pickImage(
+              source: source,
+              imageQuality: 90,
+              maxWidth: 2048,
+              maxHeight: 2048,
+            );
 
       // User cancelled
       if (pickedFile == null) {
         return;
       }
 
-      final imageFile = File(pickedFile.path);
-
+      await _analyzeImage(File(pickedFile.path));
+    } catch (e) {
       if (!mounted) return;
 
-      // Clear previous result
       setState(() {
-        _selectedImage = imageFile;
-        _predictionLabel = null;
-        _predictionConfidence = null;
-        _errorMessage = null;
-        _isPredicting = true;
+        _isPredicting = false;
+        _errorMessage = e is ApiException
+            ? e.message
+            : 'Could not capture image. Please try again.';
       });
 
+      debugPrint('Image capture error: $e');
+    }
+  }
+
+  // ============================================================
+  // ANALYZE IMAGE
+  // ============================================================
+
+  Future<void> _analyzeImage(File imageFile) async {
+    if (_isPredicting || !mounted) {
+      return;
+    }
+
+    // Clear previous result
+    setState(() {
+      _selectedImage = imageFile;
+      _predictionLabel = null;
+      _predictionConfidence = null;
+      _errorMessage = null;
+      _isPredicting = true;
+    });
+
+    try {
       // The analyze route validates the image on the server before disease
       // classification, then saves and returns the authoritative result.
       final result = await _predictionService.analyze(imageFile);
@@ -186,6 +220,32 @@ class _PlantScanPageState extends State<PlantScanPage> {
 
       debugPrint('API prediction error: $e');
     }
+  }
+
+  // ============================================================
+  // TRY AGAIN / RETAKE
+  // ============================================================
+
+  Future<void> _tryAgain() async {
+    if (_isPredicting) {
+      return;
+    }
+
+    final currentImage = _selectedImage;
+    if (currentImage != null) {
+      await _analyzeImage(currentImage);
+      return;
+    }
+
+    await _pickImage(_lastImageSource);
+  }
+
+  Future<void> _retakePhoto() async {
+    if (_isPredicting) {
+      return;
+    }
+
+    await _pickImage(ImageSource.camera);
   }
 
   // ============================================================
@@ -406,6 +466,57 @@ class _PlantScanPageState extends State<PlantScanPage> {
     );
   }
 
+  Widget _buildCaptureActions(double maxWidth) {
+    final tryAgainButton = OutlinedButton.icon(
+      key: const ValueKey('plant_scan_try_again_button'),
+      icon: const Icon(Icons.refresh),
+      label: const Text('Try Again'),
+      onPressed: _isPredicting ? null : _tryAgain,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Colors.green.shade800,
+        side: BorderSide(color: Colors.green.shade400),
+        minimumSize: const Size.fromHeight(48),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+
+    final retakeButton = ElevatedButton.icon(
+      key: const ValueKey('plant_scan_retake_button'),
+      icon: const Icon(Icons.camera_alt_outlined),
+      label: const Text('Retake'),
+      onPressed: _isPredicting ? null : _retakePhoto,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.green.shade700,
+        foregroundColor: Colors.white,
+        minimumSize: const Size.fromHeight(48),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+
+    if (maxWidth < 320) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          tryAgainButton,
+          const SizedBox(height: 10),
+          retakeButton,
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(child: tryAgainButton),
+        const SizedBox(width: 12),
+        Expanded(child: retakeButton),
+      ],
+    );
+  }
+
   // ============================================================
   // BUILD
   // ============================================================
@@ -476,6 +587,17 @@ class _PlantScanPageState extends State<PlantScanPage> {
                             child: Image.file(
                               _selectedImage!,
                               fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                color: Colors.grey.shade100,
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.broken_image_outlined,
+                                    size: 56,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                           Positioned.fill(
@@ -488,6 +610,14 @@ class _PlantScanPageState extends State<PlantScanPage> {
                         ],
                       ),
               ),
+
+              if (_selectedImage != null || _errorMessage != null) ...[
+                const SizedBox(height: 14),
+                LayoutBuilder(
+                  builder: (context, constraints) =>
+                      _buildCaptureActions(constraints.maxWidth),
+                ),
+              ],
 
               const SizedBox(height: 20),
 

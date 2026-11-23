@@ -6,6 +6,7 @@ import '../../about/presentation/about_page.dart';
 import '../../profile/presentation/profile_page.dart';
 import '../../results/presentation/results_page.dart';
 import '../../../core/layout/responsive_page.dart';
+import 'widgets/chili_care_section.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, this.userName = 'User'});
@@ -188,6 +189,10 @@ class HomeContentPage extends StatelessWidget {
                 ],
               ),
             ),
+
+            const SizedBox(height: 25),
+
+            const ChiliCareSection(),
           ],
         ),
       ),
