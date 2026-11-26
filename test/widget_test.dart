@@ -61,10 +61,11 @@ void main() {
       expect(find.text('Chili Care'), findsOneWidget);
       expect(find.text('About Chili Plants'), findsOneWidget);
       expect(find.text('Common Diseases'), findsOneWidget);
-      expect(find.text('Anthracnose'), findsOneWidget);
-      expect(find.text('Leaf Curl Virus'), findsOneWidget);
+      expect(find.text('White Spot'), findsOneWidget);
+      expect(find.text('Nutrition Deficiency'), findsOneWidget);
+      expect(find.text('Healthy Leaf'), findsOneWidget);
+      expect(find.text('Cercospora Leaf Spot'), findsOneWidget);
       expect(find.text('Bacterial Wilt'), findsOneWidget);
-      expect(find.text('Powdery Mildew'), findsOneWidget);
 
       final toggle = find.byKey(const ValueKey('chili_care_language_toggle'));
       await tester.ensureVisible(toggle);
@@ -76,7 +77,14 @@ void main() {
       expect(find.text('මිරිස් වගාව'), findsOneWidget);
       expect(find.text('මිරිස් ශාකය පිළිබඳව'), findsOneWidget);
       expect(find.text('ප්‍රධාන මිරිස් රෝග'), findsOneWidget);
-      expect(find.text('ඇන්ත්‍රැක්නෝස් (Anthracnose)'), findsOneWidget);
+      expect(find.text('සුදු ලප (White Spot)'), findsOneWidget);
+      expect(find.text('පෝෂක ඌනතාවය (Nutrition Deficiency)'), findsOneWidget);
+      expect(find.text('නිරෝගී මිරිස් කොළ (Healthy Leaf)'), findsOneWidget);
+      expect(
+        find.text('සර්කොස්පෝරා පත්‍ර ලප රෝගය (Cercospora Leaf Spot)'),
+        findsOneWidget,
+      );
+      expect(find.text('බැක්ටීරියා මැලවීමේ රෝගය (Bacterial Wilt)'), findsOneWidget);
       expect(find.text('Hello, Maria 👋'), findsOneWidget);
       expect(find.text('Quick Access'), findsOneWidget);
 

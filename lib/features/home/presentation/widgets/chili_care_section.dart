@@ -20,16 +20,20 @@ class _ChiliDiseaseInfo {
     required this.nameSin,
     required this.descEn,
     required this.descSin,
-    required this.imageUrl,
     required this.icon,
+    this.iconColor = Colors.redAccent,
+    this.assetImage,
+    this.imageUrl,
   });
 
   final String nameEn;
   final String nameSin;
   final String descEn;
   final String descSin;
-  final String imageUrl;
   final IconData icon;
+  final Color iconColor;
+  final String? assetImage;
+  final String? imageUrl;
 }
 
 /// Interactive Chili Care guide section displayed on the Home screen with
@@ -65,26 +69,46 @@ class _ChiliCareSectionState extends State<ChiliCareSection> {
 
   static const List<_ChiliDiseaseInfo> _diseases = [
     _ChiliDiseaseInfo(
-      nameEn: 'Anthracnose',
-      nameSin: 'ඇන්ත්‍රැක්නෝස් (Anthracnose)',
+      nameEn: 'White Spot',
+      nameSin: 'සුදු ලප (White Spot)',
       descEn:
-          'A severe fungal disease that primarily affects the fruits. It creates sunken, circular, dark lesions on the skin, causing the peppers to rot both on the plant and after harvest.',
+          'White Spot is a leaf condition where small white or pale-coloured spots appear on chilli leaves. These spots may spread and affect the normal appearance of the leaves. Different factors, including fungal infections and pest damage, may cause similar symptoms.',
       descSin:
-          'මෙය ප්‍රධාන වශයෙන් කරල් වලට බලපාන දරුණු දිලීර රෝගයකි. මිරිස් කරල් මත ගිලී ගිය, රවුම් තද පැහැති ලප ඇති කරන අතර, උණුසුම් සහ තෙතමනය සහිත කාලගුණය තුළ මෙම රෝගය වේගයෙන් පැතිරෙයි.',
-      imageUrl:
-          'https://encrypted-tbn0.gstatic.com/licensed-image?q=tbn:ANd9GcStIAJLZpkNa6PQt7VOeljbL15K2EWcySDTqYdasohQaf5vZMFTf0VxYCQz2C6OZdg33GvRqp1Ih-zjx6s',
+          'White Spot යනු මිරිස් කොළ මත කුඩා සුදු පැහැති හෝ ලා පැහැති ලප ඇතිවන තත්ත්වයකි. මෙම ලප ක්‍රමයෙන් වැඩි විය හැකි අතර කොළවල සාමාන්‍ය පෙනුම වෙනස් කරයි. දිලීර ආසාදන සහ කෘමි හානි ඇතුළු විවිධ හේතු නිසා මෙවැනි ලක්ෂණ ඇති විය හැක.',
+      assetImage: 'assets/images/chili_care/white_spot.jpg',
       icon: Icons.warning_amber_rounded,
     ),
     _ChiliDiseaseInfo(
-      nameEn: 'Leaf Curl Virus',
-      nameSin: 'කොළ කොඩවීමේ වෛරසය (Leaf Curl)',
+      nameEn: 'Nutrition Deficiency',
+      nameSin: 'පෝෂක ඌනතාවය (Nutrition Deficiency)',
       descEn:
-          'Transmitted primarily by whiteflies, this virus causes severe upward curling and crinkling of the leaves. Infected plants show stunted growth, pale foliage, and a massive reduction in flower and fruit production.',
+          'Nutrition Deficiency occurs when chilli plants do not receive enough essential nutrients for healthy growth. It can affect leaf colour, shape, and plant development.',
       descSin:
-          'ප්‍රධාන වශයෙන් සුදු මැස්සන් මගින් බෝවන මෙම වෛරසය නිසා පත්‍ර ඉහළට කොඩවීම සහ රැලි වැටීම සිදු වේ. වර්ධනය බාල වීම සහ අස්වැන්න විශාල වශයෙන් අඩුවීම මෙහි ප්‍රධාන ලක්ෂණයයි.',
-      imageUrl:
-          'https://encrypted-tbn1.gstatic.com/licensed-image?q=tbn:ANd9GcQssj8ElYPxnj0LSvS04NV8TZ52wDnBhBU_Zjx11yzWYHxHcF00STcuR8VJoCrYGaNWaDNXVAknJOyKFcM',
+          'මිරිස් පැළවල නිරෝගී වර්ධනය සඳහා අවශ්‍ය පෝෂක ද්‍රව්‍ය ප්‍රමාණවත් ලෙස නොලැබීම පෝෂක ඌනතාවය ලෙස හැඳින්වේ. මෙය කොළවල වර්ණය, හැඩය සහ පැළයේ වර්ධනයට බලපායි.',
+      assetImage: 'assets/images/chili_care/nutrition_deficiency.jpg',
       icon: Icons.eco_outlined,
+      iconColor: Colors.orange,
+    ),
+    _ChiliDiseaseInfo(
+      nameEn: 'Healthy Leaf',
+      nameSin: 'නිරෝගී මිරිස් කොළ (Healthy Leaf)',
+      descEn:
+          'A healthy chilli leaf has a natural green colour and normal shape. It does not show visible disease symptoms such as unusual spots, yellowing, or abnormal curling. Healthy leaves help plants produce energy through photosynthesis.',
+      descSin:
+          'නිරෝගී මිරිස් කොළ ස්වභාවික කොළ පැහැයෙන් සහ සාමාන්‍ය හැඩයෙන් යුක්ත වේ. එහි අසාමාන්‍ය ලප, කහ පැහැ වීම හෝ කොළ ඇඹරීම වැනි රෝග ලක්ෂණ දක්නට නොලැබේ. ප්‍රභාසංශ්ලේෂණ ක්‍රියාවලිය මගින් ශාකයට අවශ්‍ය ශක්තිය නිපදවීමට නිරෝගී කොළ උපකාරී වේ.',
+      assetImage: 'assets/images/chili_care/healthy_leaf.jpg',
+      icon: Icons.check_circle_outline,
+      iconColor: Colors.green,
+    ),
+    _ChiliDiseaseInfo(
+      nameEn: 'Cercospora Leaf Spot',
+      nameSin: 'සර්කොස්පෝරා පත්‍ර ලප රෝගය (Cercospora Leaf Spot)',
+      descEn:
+          'Cercospora Leaf Spot is a fungal disease that affects chilli leaves. It causes circular brown spots with grey or light-coloured centres. In severe cases, infected leaves may turn yellow, dry, and fall off.',
+      descSin:
+          'Cercospora Leaf Spot යනු මිරිස් කොළවලට බලපාන දිලීර රෝගයකි. මෙම රෝගය නිසා කොළ මත අළු හෝ ලා පැහැති මධ්‍යයක් සහිත වටකුරු දුඹුරු පැහැති ලප ඇති වේ. රෝගය උග්‍ර වූ විට කොළ කහ පැහැයට හැරී වියළී හැලී යා හැකිය.',
+      assetImage: 'assets/images/chili_care/cercospora_leaf_spot.jpg',
+      icon: Icons.warning_amber_rounded,
     ),
     _ChiliDiseaseInfo(
       nameEn: 'Bacterial Wilt',
@@ -96,17 +120,6 @@ class _ChiliCareSectionState extends State<ChiliCareSection> {
       imageUrl:
           'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTR7IsrpqNj3nDDp8koiRp-vYIRObgFDJJL67CWQ8B_yScSnURTN6E3Q9ae&s=10',
       icon: Icons.pest_control,
-    ),
-    _ChiliDiseaseInfo(
-      nameEn: 'Powdery Mildew',
-      nameSin: 'පිටිපුස් රෝගය (Powdery Mildew)',
-      descEn:
-          'A fungal infection characterized by a white, powdery coating on the undersides of the leaves, accompanied by yellowish patches on the upper surface. It leads to premature leaf drop.',
-      descSin:
-          'පත්‍රවල යටි පැත්තේ සුදු පැහැති පිටි වැනි දිලීර වර්ධනයක් සහ උඩ පැත්තේ කහ පැහැති ලප ඇති කරයි. මේ නිසා පත්‍ර ඉක්මනින් හැලී යන අතර කරල් හිරු එළියට පිළිස්සීමට ලක් විය හැක.',
-      imageUrl:
-          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVcfTQZLNkVLQ05fn3Kh0_CC2jNHGBJZeau66mjGD3vQ&s=10',
-      icon: Icons.warning_amber_rounded,
     ),
   ];
 
@@ -355,6 +368,38 @@ class _ChiliCareSectionState extends State<ChiliCareSection> {
     );
   }
 
+  Widget _buildDiseaseImage(_ChiliDiseaseInfo disease) {
+    final asset = disease.assetImage;
+    if (asset != null) {
+      return Image.asset(
+        asset,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          color: Colors.grey.shade300,
+          child: const Icon(Icons.broken_image, color: Colors.grey),
+        ),
+      );
+    }
+
+    return Image.network(
+      disease.imageUrl ?? '',
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Container(
+          color: Colors.green.shade50,
+          child: Center(
+            child: Icon(Icons.eco_outlined, color: Colors.green.shade300),
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) => Container(
+        color: Colors.grey.shade300,
+        child: const Icon(Icons.broken_image, color: Colors.grey),
+      ),
+    );
+  }
+
   Widget _buildDiseaseCard(
     _ChiliDiseaseInfo disease, {
     required double imageWidth,
@@ -384,29 +429,7 @@ class _ChiliCareSectionState extends State<ChiliCareSection> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.network(
-                      disease.imageUrl,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          color: Colors.green.shade50,
-                          child: Center(
-                            child: Icon(
-                              Icons.eco_outlined,
-                              color: Colors.green.shade300,
-                            ),
-                          ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: Colors.grey.shade300,
-                        child: const Icon(
-                          Icons.broken_image,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ),
+                    _buildDiseaseImage(disease),
                     Positioned(
                       top: 8,
                       left: 8,
@@ -416,7 +439,7 @@ class _ChiliCareSectionState extends State<ChiliCareSection> {
                         child: Icon(
                           disease.icon,
                           size: 16,
-                          color: Colors.redAccent,
+                          color: disease.iconColor,
                         ),
                       ),
                     ),
